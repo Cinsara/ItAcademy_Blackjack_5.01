@@ -30,7 +30,7 @@ class PlayerServiceTest {
     void createPlayer() {
         playerRepository.deleteAll();
 
-        Player player = new Player(null, "Alice", 0, 0);
+        Player player = new Player(null, "Alice", 0, 0,450);
         Player savedPlayer = playerService.createPlayer(player).block();
 
         assertNotNull(savedPlayer.getId());
@@ -47,7 +47,7 @@ class PlayerServiceTest {
     void getPlayerById() {
         playerRepository.deleteAll();
 
-        Player player = playerService.createPlayer(new Player(null, "Grace", 7, 4)).block();
+        Player player = playerService.createPlayer(new Player(null, "Grace", 7, 4,1002)).block();
 
         Player retrievedPlayer = playerService.getPlayerById(player.getId()).block();
 
@@ -70,9 +70,9 @@ class PlayerServiceTest {
     void getAllPlayers() {
         playerRepository.deleteAll().block();
 
-        Player player1 = playerService.createPlayer(new Player(null, "Alice", 5, 2)).block();
-        Player player2 = playerService.createPlayer(new Player(null, "Bob", 3, 1)).block();
-        Player player3 = playerService.createPlayer(new Player(null, "Charlie", 8, 5)).block();
+        Player player1 = playerService.createPlayer(new Player(null, "Alice", 5, 2,500)).block();
+        Player player2 = playerService.createPlayer(new Player(null, "Bob", 3, 1,320)).block();
+        Player player3 = playerService.createPlayer(new Player(null, "Charlie", 8, 5,234)).block();
 
         List<Player> players = playerService.getAllPlayers().collectList().block();
 
@@ -86,7 +86,7 @@ class PlayerServiceTest {
     @Test
     void deletePlayer() {
         playerRepository.deleteAll().block();
-        Player player = playerService.createPlayer(new Player(null, "Dave", 4, 2)).block();
+        Player player = playerService.createPlayer(new Player(null, "Dave", 4, 2,234)).block();
         playerService.deletePlayer(Integer.valueOf(player.getId())).block();
         assertThrows(PlayerNotFoundException.class, () -> playerService.getPlayerById(Integer.valueOf(player.getId())).block());
     }
@@ -95,7 +95,7 @@ class PlayerServiceTest {
     void updatePlayerName() {
         playerRepository.deleteAll();
         Player player = playerService.createPlayer(new Player(null, "Charlie", 5,
-                2)).block();
+                2,456)).block();
 
         player.setGamesPlayed(player.getGamesPlayed() + 1);
         player.setGamesWon(player.getGamesWon() + 1);
@@ -109,9 +109,9 @@ class PlayerServiceTest {
     void getRanking() {
         playerRepository.deleteAll().block();
 
-        playerService.createPlayer(new Player(null, "Dave", 10, 8)).block();
-        playerService.createPlayer(new Player(null, "Eve", 15, 12)).block();
-        playerService.createPlayer(new Player(null, "Frank", 5, 3)).block();
+        playerService.createPlayer(new Player(null, "Dave", 10, 8,785)).block();
+        playerService.createPlayer(new Player(null, "Eve", 15, 12,123)).block();
+        playerService.createPlayer(new Player(null, "Frank", 5, 3,45)).block();
 
         List<Player> ranking = playerService.getRanking().collectList().block();
 

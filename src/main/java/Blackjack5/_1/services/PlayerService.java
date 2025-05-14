@@ -1,5 +1,6 @@
 package Blackjack5._1.services;
 
+import Blackjack5._1.dto.NameUpdateRequest;
 import Blackjack5._1.exceptions.PlayerNotFoundException;
 import Blackjack5._1.model.Player;
 import Blackjack5._1.repositories.PlayerRepository;
@@ -35,16 +36,16 @@ public class PlayerService {
         return playerRepository.deleteById(id);
     }
 
-    public Mono<Player> updatePlayerName(Integer playerId, String newName) {
+    public Mono<Player> updatePlayerName(Integer playerId, NameUpdateRequest newName) {
         return playerRepository.findById(playerId)
                 .flatMap(player -> {
-                    player.setName(newName);
+                    player.setName(newName.getName());
                     return playerRepository.save(player);
                 });
     }
 
     public Flux<Player> getRanking() {
-        return playerRepository.findAllByOrderByGamesWonDesc();
+        return playerRepository.findAllByOrderByBalanceDesc();
     }
 }
 

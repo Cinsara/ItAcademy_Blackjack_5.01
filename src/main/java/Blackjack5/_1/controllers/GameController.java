@@ -1,5 +1,6 @@
 package Blackjack5._1.controllers;
 
+import Blackjack5._1.dto.GameRequest;
 import Blackjack5._1.model.Game;
 import Blackjack5._1.services.GameAction;
 import Blackjack5._1.services.GameService;
@@ -20,9 +21,12 @@ public class GameController {
     }
 
     @PostMapping("/new")
-    public Mono<ResponseEntity<Game>> newGame(@RequestBody Game game) {
-        return gameService.newGame(game)
-                .map(savedGame -> ResponseEntity.status(HttpStatus.CREATED).body(savedGame));
+    public Mono<ResponseEntity<Game>> newGame(@RequestBody GameRequest request) {
+        if(request.getPlayerName() == null || request.getPlayerName().isBlank()) {
+            return Mono.just(ResponseEntity.badRequest().build());
+        }
+        return gameService.newGame(request)
+                .map(game -> ResponseEntity.status(HttpStatus.CREATED).body(game));
     }
 
     @GetMapping("/{id}")
@@ -39,7 +43,7 @@ public class GameController {
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}/delete")
     public Mono<ResponseEntity<Void>> deleteGame(@PathVariable String id) {
         return gameService.deleteGame(id)
                 .thenReturn(ResponseEntity.noContent().build());

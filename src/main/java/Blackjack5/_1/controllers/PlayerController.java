@@ -1,6 +1,7 @@
 package Blackjack5._1.controllers;
 
 
+import Blackjack5._1.dto.NameUpdateRequest;
 import Blackjack5._1.model.Player;
 import Blackjack5._1.services.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,11 +30,11 @@ public class PlayerController {
     @GetMapping("/{playerId}")
     public Mono<ResponseEntity<Player>> getPlayerById(@PathVariable Integer playerId) {
         return playerService.getPlayerById(playerId)
-                .map(player -> ResponseEntity.ok(player))
+                .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
-    @GetMapping
+    @GetMapping("/allPlayers")
     public Flux<Player> getAllPlayers() {
         return playerService.getAllPlayers();
     }
@@ -44,9 +45,9 @@ public class PlayerController {
     }
 
     @PutMapping("/{playerId}")
-    public Mono<ResponseEntity<Player>> updateName(@PathVariable Integer playerId, @RequestBody String newName) {
+    public Mono<ResponseEntity<Player>> updateName(@PathVariable Integer playerId, @RequestBody NameUpdateRequest newName) {
         return playerService.updatePlayerName(playerId, newName)
-                .map(updatedPlayer -> ResponseEntity.ok(updatedPlayer))
+                .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 

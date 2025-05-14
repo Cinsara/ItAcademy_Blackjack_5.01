@@ -1,8 +1,10 @@
 package Blackjack5._1.services;
 
+import Blackjack5._1.dto.GameRequest;
 import Blackjack5._1.model.Deck;
 import Blackjack5._1.model.Game;
 import Blackjack5._1.repositories.GameRepository;
+import Blackjack5._1.repositories.PlayerRepository;
 import Blackjack5._1.utils.BlackjackUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,20 +15,32 @@ import java.util.List;
 @Service
 public class GameService {
     private final GameRepository gameRepository;
+    private final PlayerRepository playerRepository;
 
     @Autowired
-    public GameService(GameRepository gameRepository) {
+    public GameService(GameRepository gameRepository, PlayerRepository playerRepository) {
         this.gameRepository = gameRepository;
+        this.playerRepository = playerRepository;
     }
 
-    public Mono<Game> newGame(Game game) {
-        Deck deck = new Deck();
-        game.setStatus("IN_PROGRESS");
+    public Mono<Game> newGame(GameRequest request) {
+        return playerRepository.findOrCreatePlayer(request.getPlayerName())
+                .flatMap(player -> {
+                    player.setGamesPlayed(player.getGamesPlayed() + 1);
+                    return playerRepository.save(player);
+                })
+                .flatMap(player -> {
+                    Game game = new Game();
+                    game.setPlayerId(String.valueOf(player.getId()));
+                    game.setBetAmount(10.0);
 
-        game.setPlayerHand(List.of(deck.drawCard(), deck.drawCard()));
-        game.setDealerHand(List.of(deck.drawCard(), deck.drawCard()));
+                    Deck deck = new Deck();
+                    game.setPlayerHand(List.of(deck.drawCard(), deck.drawCard()));
+                    game.setDealerHand(List.of(deck.drawCard(), deck.drawCard()));
+                    game.setStatus("IN_PROGRESS");
 
-        return gameRepository.save(game);
+                    return gameRepository.save(game);
+                });
     }
 
     public Mono<Game> getGameById(String gameId) {
@@ -41,18 +55,33 @@ public class GameService {
         return gameRepository.findById(gameId)
                 .flatMap(game -> {
                     Deck deck = new Deck();
-                    switch (action.getActionType()){
+                    switch (action.getActionType()) {
                         case "HIT":
+                          if(!"IN_PROGRESS".equals(game.getStatus())){
+                              return Mono.error(new IllegalStateException("The game is over"));
+                            }
                             game.getPlayerHand().add(deck.drawCard());
                             break;
                         case "STAND":
-                            while (BlackjackUtils.calculateHandValue(game.getDealerHand()) < 17){
+                            while (BlackjackUtils.calculateHandValue(game.getDealerHand()) < 17) {
                                 game.getDealerHand().add(deck.drawCard());
                             }
                             break;
                     }
                     game.setStatus(BlackjackUtils.checkGameResult(game));
-                    return gameRepository.save(game);
+                    return gameRepository.save(game)
+                            .flatMap(savedGame -> {
+                                if ("PLAYER_WINS".equals(savedGame.getStatus())) {
+                                    return playerRepository.findById(Integer.valueOf(savedGame.getPlayerId()))
+                                            .flatMap(player -> {
+                                                player.setBalance(player.getBalance() + (2 * savedGame.getBetAmount()));
+                                                player.setGamesWon(player.getGamesWon() + 1);
+                                                return playerRepository.save(player);
+                                            })
+                                            .thenReturn(savedGame);
+                                }
+                                return Mono.just(savedGame);
+                            });
                 });
     }
 }

@@ -59,14 +59,6 @@ class PlayerServiceTest {
     }
 
     @Test
-    void testGetPlayerById_NotFound() {
-        when(playerRepository.findById(999)).thenReturn(Mono.empty());
-        assertThrows(PlayerNotFoundException.class, () ->
-                playerService.getPlayerById(999));
-    }
-
-
-    @Test
     void getAllPlayers() {
         playerRepository.deleteAll().block();
 

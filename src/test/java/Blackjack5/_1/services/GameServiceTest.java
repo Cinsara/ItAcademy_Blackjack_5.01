@@ -112,5 +112,29 @@ class GameServiceTest {
 
     @Test
     void playGame() {
+        Player player = new Player(null, "TestPlayer", 0, 0, 100.0);
+        Player savedPlayer = playerRepository.save(player).block();
+
+        Deck deck = new Deck();
+        Game game = new Game();
+        game.setPlayerId(savedPlayer.getId().toString());
+        game.setPlayerHand(List.of(deck.drawCard(), deck.drawCard()));
+        game.setDealerHand(List.of(deck.drawCard(), deck.drawCard()));
+        game.setBetAmount(10.0);
+        game.setStatus("IN_PROGRESS");
+
+        Game savedGame = gameRepository.save(game).block();
+
+        GameAction action = new GameAction();
+        action.setActionType("HIT");
+
+        gameService.playGame(savedGame.getId(), action)
+                .as(StepVerifier::create)
+                .assertNext(updatedGame -> {
+                    assertThat(updatedGame.getId()).isEqualTo(savedGame.getId());
+                    assertThat(updatedGame.getPlayerHand().size()).isGreaterThan(2);
+                    assertThat(updatedGame.getStatus()).isNotNull();
+                })
+                .verifyComplete();
     }
 }
